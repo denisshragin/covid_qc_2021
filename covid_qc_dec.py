@@ -142,10 +142,10 @@ for li_item in investigations:
 
 date_investigation = " ".join(investigations[0].text.split(":")[0].split()[3:])	
 number_investigations_dict["date"] = date_investigation
-#print(number_investigations_dict)
+print(number_investigations_dict)
 update_data_file("investigations.txt", number_investigations_dict)
 
-div_hospitalisations = soup.find(id="c50210")
+div_hospitalisations = soup.find(id="c82792")
 hospitalisations = div_hospitalisations.ul.find_all('li')
 number_hospitalisations_dict = {}
 for li_item in hospitalisations:
@@ -158,5 +158,5 @@ hosp_string = div_hospitalisations.p.text
 result  = re.search("[0-2]?[0-9].{4,11}202.", hosp_string)
 date_hospitalisation = result.group(0).replace("\xa0", " ")
 number_hospitalisations_dict["date"] = date_hospitalisation
-#print(number_hospitalisations_dict)
+print(number_hospitalisations_dict)
 update_data_file("hospitalisations.txt", number_hospitalisations_dict)
