@@ -40,3 +40,11 @@
 {'Prélèvements effectués': 18512, 'Analyses réalisées': 19107, 'Cas négatifs': 2606755, 'Cas confirmés': 271737, 'date': '7 février 2021'}
 {'Prélèvements effectués': 26470, 'Analyses réalisées': 24582, 'Cas négatifs': 2614458, 'Cas confirmés': 272726, 'date': '8 février 2021'}
 {'Prélèvements effectués': 32207, 'Analyses réalisées': 32699, 'Cas négatifs': 2623478, 'Cas confirmés': 271737, 'date': '9 février 2021'}
+{'Prélèvements effectués': 33587, 'Analyses réalisées': 32318, 'Cas négatifs': 2632028, 'Cas confirmés': 274831, 'date': '10 février 2021'}
+{'Prélèvements effectués': 28404, 'Analyses réalisées': 29785, 'Cas négatifs': 2648590, 'Cas confirmés': 276790, 'date': '12 février 2021'}
+{'Prélèvements effectués': 22649, 'Analyses réalisées': 23765, 'Cas négatifs': 2655191, 'Cas confirmés': 277518, 'date': '13 février 2021'}
+{'Prélèvements effectués': 16824, 'Analyses réalisées': 17376, 'Cas négatifs': 2661761, 'Cas confirmés': 278187, 'date': '14 février 2021'}
+{'Prélèvements effectués': 28672, 'Analyses réalisées': 25293, 'Cas négatifs': 2672517, 'Cas confirmés': 278987, 'date': '15 février 2021'}
+{'Prélèvements effectués': 29363, 'Analyses réalisées': 31558, 'Cas négatifs': 2680694, 'Cas confirmés': 279887, 'date': '16 février 2021'}
+{'Prélèvements effectués': 32491, 'Analyses réalisées': 30126, 'Cas négatifs': 2690601, 'Cas confirmés': 280687, 'date': '17 février 2021'}
+{'Prélèvements effectués': 30068, 'Analyses réalisées': 33068, 'Cas négatifs': 2698624, 'Cas confirmés': 281456, 'date': '18 février 2021'}

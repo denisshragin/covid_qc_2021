@@ -42,3 +42,7 @@
 {'Nombre d’hospitalisations régulières': 795, 'Nombre en soins intensifs': 145, 'Nombre total d’hospitalisations': 940, 'date': '8 février 2021'}
 {'Nombre d’hospitalisations régulières': 770, 'Nombre en soins intensifs': 148, 'Nombre total d’hospitalisations': 918, 'date': '9 février 2021'}
 {'Nombre d’hospitalisations régulières': 731, 'Nombre en soins intensifs': 143, 'Nombre total d’hospitalisations': 874, 'date': '10 février 2021'}
+{'Nombre d’hospitalisations régulières': 712, 'Nombre en soins intensifs': 137, 'Nombre total d’hospitalisations': 849, 'date': '11 février 2021'}
+{'Nombre d’hospitalisations régulières': 673, 'Nombre en soins intensifs': 132, 'Nombre total d’hospitalisations': 805, 'date': '13 février 2021'}
+{'Nombre d’hospitalisations régulières': 668, 'Nombre en soins intensifs': 136, 'Nombre total d’hospitalisations': 804, 'date': '14 février 2021'}
+{'Nombre d’hospitalisations régulières': 637, 'Nombre en soins intensifs': 134, 'Nombre total d’hospitalisations': 771, 'date': '15 février 2021'}

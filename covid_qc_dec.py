@@ -13,6 +13,11 @@ url_vaccin = "https://cdn-contenu.quebec.ca/cdn-contenu/sante/documents/Probleme
 id_div_deaths_date = "c63043"
 id_div_vaccin_date = "c81603"
 
+list_of_months = ['ja', 'f', 'mar', 'avr', 'mai', 'juin', 'juil', 'ao', 'sep', 'oct', 'nov', 'd']
+dict_of_months = {'ja': 'janvier', 'f': 'février', 'mar': 'mars', 'avr': 'avril', 'mai': 'mai', 'juin': 'juin', 'juil': 'juillet', 'ao': 'août', 'sep': 'septembre', 'oct': 'octobre', 'nov': 'novembre', 'd': 'décembre'}
+dict_of_months_numeric = {'01': 'janvier', '02': 'février', '03': 'mars', '04': 'avril', '05': 'mai', '06': 'juin', '07': 'juillet', '08': 'août', '09': 'septembre', '10': 'octobre', '11': 'novembre', '12': 'décembre'}
+
+
 def get_soup(url):
 	result = requests.get(url)
 	src = result.content
@@ -43,11 +48,8 @@ def get_cas_region(url):
 	01 - Bas-Saint-Laurent;7;2;4;4;7;10;1 429
 	"""
 	cas_data_list = get_data_list(url)
-	list_of_dates = cas_data_list[0].split(";")[1:-1]
-	for index, date in enumerate(list_of_dates):
-		if "2021" not in date:
-			date = date + " 2021"
-			list_of_dates[index] = date
+	row_of_dates = cas_data_list[0]
+	list_of_dates = extract_date(row_of_dates)
 	key_total = "Total des cas confirmés depuis le début de la pandémie"
 	region_data = cas_data_list[1:-1]
 	number_case_dict = {}
@@ -67,7 +69,7 @@ def get_cas_region(url):
 					except:
 						number_of_cases = row_data_list[index+1]
 					number_case_dict[region_name] = number_of_cases
-			print(number_case_dict)
+			# print(number_case_dict)
 			update_data_file("covid_qc_decembre.txt", number_case_dict)
 		else:
 			number_case_dict["date"] = date
@@ -87,7 +89,7 @@ def get_cas_region(url):
 					number_case_dict[region_name] = number_of_cases
 					number_total_dict[region_name] = number_total
 					print(number_case_dict)
-					print(number_total_dict)
+					# print(number_total_dict)
 	return number_case_dict, number_total_dict
 
 def get_deaths_data(url_deaths, soup, id_div_deaths_date):
@@ -112,6 +114,40 @@ def update_data_file(filename, dict_of_data):
             with open(filename, "a", encoding = "utf-8") as f:
                 f.write(str(dict_of_data))
                 f.write("\n")
+
+def extract_date(date_string):
+    list_of_extracted_dates = []
+    list_of_dates = date_string.split(";")[1:-1]
+    for date_item in list_of_dates:
+        if not '2021-' in date_item:
+            number = extract_number(date_item)
+            month = extract_month(date_item)
+            extracted_date = '{} {} 2021'.format(number, month)
+        else:
+            date_list = date_item.split('-')
+            month = dict_of_months_numeric[date_list[1]]
+            if date_list[2].startswith('0'):
+                number = date_list[2][1:]
+            else:
+                number = date_list[2]
+            extracted_date = '{} {} 2021'.format(number, month)
+        list_of_extracted_dates.append(extracted_date)
+    return list_of_extracted_dates
+
+def extract_number(date_item):
+    number = re.search('[0-3]?[0-9]', date_item)
+    if number.group(0).startswith('0'):
+        number_without_zero = number.group(0)[1:]
+    else:
+        number_without_zero = number.group(0)
+    return number_without_zero
+
+def extract_month(date_item):
+    for month_name in list_of_months:
+        if month_name in date_item:
+            month = dict_of_months[month_name]
+            break
+    return month 
 
 soup = get_soup(url_situation)
 soup_vaccination = get_soup(url_vaccination)
