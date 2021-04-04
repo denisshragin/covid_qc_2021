@@ -1,6 +1,10 @@
 import requests
 import re
+import gspread
+import csv
+import json
 from bs4 import BeautifulSoup
+import config
 
 url_situation = "https://www.quebec.ca/sante/problemes-de-sante/a-z/coronavirus-2019/situation-coronavirus-quebec/"
 url_vaccination = "https://www.quebec.ca/sante/problemes-de-sante/a-z/coronavirus-2019/situation-coronavirus-quebec/donnees-sur-la-vaccination-covid-19/"
@@ -17,6 +21,10 @@ list_of_months = ['ja', 'f', 'mar', 'avr', 'mai', 'juin', 'juil', 'ao', 'sep', '
 dict_of_months = {'ja': 'janvier', 'f': 'février', 'mar': 'mars', 'avr': 'avril', 'mai': 'mai', 'juin': 'juin', 'juil': 'juillet', 'ao': 'août', 'sep': 'septembre', 'oct': 'octobre', 'nov': 'novembre', 'd': 'décembre'}
 dict_of_months_numeric = {'01': 'janvier', '02': 'février', '03': 'mars', '04': 'avril', '05': 'mai', '06': 'juin', '07': 'juillet', '08': 'août', '09': 'septembre', '10': 'octobre', '11': 'novembre', '12': 'décembre'}
 
+COLUMNS = ["Bas-Saint-Laurent", "Saguenay – Lac-Saint-Jean", "Capitale-Nationale", "Mauricie-et-Centre-du-Québec", "Estrie", "Montréal", "Outaouais", "Abitibi-Témiscamingue", "Côte-Nord", "Nord-du-Québec", "Gaspésie – Îles-de-la-Madeleine", "Chaudière-Appalaches", "Laval", "Lanaudière", "Laurentides", "Montérégie", "Nunavik", "Terres-Cries-de-la-Baie-James", "Hors Québec", "Région à déterminer", "Total", "date"]
+columns_dict = {"Bas-Saint-Laurent": 0, "Saguenay – Lac-Saint-Jean": 1, "Capitale-Nationale": 2, "Mauricie-et-Centre-du-Québec": 3, "Estrie": 4, "Montréal": 5, "Outaouais": 6, "Abitibi-Témiscamingue": 7, "Côte-Nord": 8, "Nord-du-Québec": 9, "Gaspésie – Îles-de-la-Madeleine": 10, "Chaudière-Appalaches": 11, "Laval": 12, "Lanaudière": 13, "Laurentides": 14, "Montérégie": 15, "Nunavik": 16, "Terres-Cries-de-la-Baie-James": 17, "Hors Québec": 18, "Région à déterminer": 19, "Total": 20, "date": 21}
+columns_dict_inv = {'Prélèvements effectués': 0, 'Analyses réalisées': 1, 'Cas négatifs': 2, 'Cas confirmés': 3, 'date': 4}
+columns_dict_vac = {"Bas-Saint-Laurent": 0, "Saguenay - Lac-Saint-Jean": 1, "Capitale-Nationale": 2, "Mauricie et Centre-du-Québec": 3, "Estrie": 4, "Montréal": 5, "Outaouais": 6, "Abitibi-Témiscamingue": 7, "Côte-Nord": 8, "Nord-du-Québec": 9, "Gaspésie - Îles-de-la-Madeleine": 10, "Chaudière-Appalaches": 11, "Laval": 12, "Lanaudière": 13, "Laurentides": 14, "Montérégie": 15, "Nunavik": 16, "Terres-Cries-de-la-Baie-James": 17, "Opitciwan": 18, "Wemotaci":19, "Manawan":20, "Inconnue": 21, "Total": 22, "date": 23}
 
 def get_soup(url):
 	result = requests.get(url)
@@ -69,8 +77,6 @@ def get_cas_region(url):
 					except:
 						number_of_cases = row_data_list[index+1]
 					number_case_dict[region_name] = number_of_cases
-			# print(number_case_dict)
-			update_data_file("covid_qc_decembre.txt", number_case_dict)
 		else:
 			number_case_dict["date"] = date
 			number_total_dict["date"] = date
@@ -88,8 +94,6 @@ def get_cas_region(url):
 						number_of_cases = row_data_list[index+1]
 					number_case_dict[region_name] = number_of_cases
 					number_total_dict[region_name] = number_total
-					print(number_case_dict)
-					# print(number_total_dict)
 	return number_case_dict, number_total_dict
 
 def get_deaths_data(url_deaths, soup, id_div_deaths_date):
@@ -107,13 +111,6 @@ def get_vaccin_data(url_vaccin, soup, id_div_vaccin_date):
 	vaccin_date = div_vaccin_date.split(",")[1].strip().replace("\xa0", " ")
 	number_vaccin_dict["date"] = vaccin_date
 	return number_vaccin_dict
-
-def update_data_file(filename, dict_of_data):
-    with open(filename, "r", encoding = "utf-8") as f:
-        if dict_of_data["date"] not in f.read():
-            with open(filename, "a", encoding = "utf-8") as f:
-                f.write(str(dict_of_data))
-                f.write("\n")
 
 def extract_date(date_string):
     list_of_extracted_dates = []
@@ -147,23 +144,49 @@ def extract_month(date_item):
         if month_name in date_item:
             month = dict_of_months[month_name]
             break
-    return month 
+    return month
+
+def gs_update(gs_key, dict_of_data, columns_dict, json_filename=config.gs_json_config):
+	gs = gspread.service_account(filename=json_filename)
+	sh = gs.open_by_key(gs_key)
+	worksheet = sh.get_worksheet(0)
+	data_list = dict_to_list(dict_of_data, columns_dict)
+	worksheet.append_row(data_list)
+
+def dict_to_list(dict_of_data, columns_dict):
+	data_list = [None]*(len(columns_dict)+1)
+	for key in dict_of_data:
+		if key != "Madeleine":
+			if key not in dict_of_data:
+				data_list[columns_dict[key]] = 'NA'
+			data_list[columns_dict[key]] = dict_of_data[key]
+		else:
+			data_list[10] = dict_of_data[key]
+	return data_list
+
+def update_data_file(filename, dict_of_data, gs_key, columns_dict=columns_dict, json_filename=config.gs_json_config):
+    with open(filename, "r", encoding = "utf-8") as f:
+        if dict_of_data["date"] not in f.read():
+            with open(filename, "a", encoding = "utf-8") as f:
+                f.write(str(dict_of_data))
+                f.write("\n")
+                gs_update(gs_key, dict_of_data, columns_dict, json_filename=config.gs_json_config)
 
 soup = get_soup(url_situation)
 soup_vaccination = get_soup(url_vaccination)
 
-number_case_dict_7jours, number_semaine_7jours = get_cas_region(url_cas_region_7jours)
-update_data_file("covid_qc_decembre.txt", number_case_dict_7jours)
+# number_case_dict_7jours, number_semaine_7jours = get_cas_region(url_cas_region_7jours)
+# update_data_file("covid_qc_decembre.txt", number_case_dict_7jours)
 
 number_case_dict, number_total_dict = get_cas_region(url_cas_region)
-update_data_file("covid_qc_decembre.txt", number_case_dict)
-update_data_file("covid_qc_total.txt", number_total_dict)
+update_data_file(filename="covid_qc_decembre.txt", dict_of_data=number_case_dict, gs_key=config.gs_key_cas)
+update_data_file(filename="covid_qc_total.txt",dict_of_data=number_total_dict, gs_key=config.gs_key_cas_total)
 
 number_deaths_dict =  get_deaths_data(url_deaths, soup, id_div_deaths_date)
-update_data_file("deaths_qc.txt", number_deaths_dict)
+update_data_file(filename="deaths_qc.txt", dict_of_data=number_deaths_dict, gs_key=config.gs_key_deaths)
 
 number_vaccin_dict =  get_vaccin_data(url_vaccin, soup_vaccination, id_div_vaccin_date)
-update_data_file("vaccin.txt", number_vaccin_dict)
+update_data_file(filename="vaccin.txt", dict_of_data=number_vaccin_dict, gs_key=config.gs_key_vaccin, columns_dict=columns_dict_vac)
 
 div_investigations = soup.find(id="c50212")
 
@@ -178,21 +201,22 @@ for li_item in investigations:
 
 date_investigation = " ".join(investigations[0].text.split(":")[0].split()[3:])	
 number_investigations_dict["date"] = date_investigation
-print(number_investigations_dict)
-update_data_file("investigations.txt", number_investigations_dict)
+#print(number_investigations_dict)
+update_data_file(filename="investigations.txt", dict_of_data=number_investigations_dict, gs_key=config.gs_key_investigations, columns_dict=columns_dict_inv)
 
-div_hospitalisations = soup.find(id="c82792")
-hospitalisations = div_hospitalisations.ul.find_all('li')
-number_hospitalisations_dict = {}
-for li_item in hospitalisations:
-	data_list = li_item.text.split(":")
-	dict_key = data_list[0].strip()
-	if dict_key[-1].isnumeric():
-		dict_key = dict_key[:-1]
-	number_hospitalisations_dict[dict_key] = int(data_list[-1].strip().replace(" ", "").replace("\xa0", ""))
-hosp_string = div_hospitalisations.p.text
-result  = re.search("[0-2]?[0-9].{4,11}202.", hosp_string)
-date_hospitalisation = result.group(0).replace("\xa0", " ")
-number_hospitalisations_dict["date"] = date_hospitalisation
-print(number_hospitalisations_dict)
-update_data_file("hospitalisations.txt", number_hospitalisations_dict)
+# div_hospitalisations = soup.find(id="c82792")
+# #print(div_hospitalisations)
+# hospitalisations = div_hospitalisations.ul.find_all('li')
+# number_hospitalisations_dict = {}
+# for li_item in hospitalisations:
+# 	data_list = li_item.text.split(":")
+# 	dict_key = data_list[0].strip()
+# 	if dict_key[-1].isnumeric():
+# 		dict_key = dict_key[:-1]
+# 	number_hospitalisations_dict[dict_key] = int(data_list[-1].strip().replace(" ", "").replace("\xa0", ""))
+# hosp_string = div_hospitalisations.p.text
+# result  = re.search("[0-2]?[0-9].{4,11}202.", hosp_string)
+# date_hospitalisation = result.group(0).replace("\xa0", " ")
+# number_hospitalisations_dict["date"] = date_hospitalisation
+# #print(number_hospitalisations_dict)
+# update_data_file("hospitalisations.txt", number_hospitalisations_dict)
