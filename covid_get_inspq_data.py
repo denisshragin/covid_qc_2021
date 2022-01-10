@@ -60,10 +60,8 @@ for header in COVID_AGES_SEX_HEADER:
         if key in SEX:
             data_sex[key] = data_dict[key]
     data_ages_list=list(data_ages.values())
-# 	print(data_ages)
 
     data_sex_list=list(data_sex.values())
-# 	print(data_sex)
 
     worksheet_ages.append_row(data_ages_list)
     worksheet_sex.append_row(data_sex_list)
